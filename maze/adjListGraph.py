@@ -27,7 +27,7 @@ class AdjListGraph(Graph):
         
     def addVertex(self, label:Coordinates):
         if label not in self.vertexDictionary: #if the coord hasn't been added already
-            self.vertexDictionary[label] = [] #create a blank list as the value with the coord as the key
+            self.vertexDictionary[label] = {} #create a blank dictionary as the value with the coord as the key
 
 
 
@@ -39,27 +39,24 @@ class AdjListGraph(Graph):
 
 
     def addEdge(self, vert1:Coordinates, vert2:Coordinates, addWall:bool = False)->bool:
-        if vert1 in self.vertexDictionary and vert2 in self.vertexDictionary: #check if the points even exist in the first place
-            if not addWall: #make sure to not set two verticies with a wall in between to 1
-                self.vertexDictionary[vert1].append(vert2) #append each point to the other's adjacency list
-                self.vertexDictionary[vert2].append(vert1)
-                return True
+        if vert1.isAdjacent(vert2): #check if the points are adjacent
+            self.vertexDictionary[vert1][vert2] = addWall #append each point to the other's adjacency dictionary with the value of the relationship being whether there is a wall or not
+            self.vertexDictionary[vert2][vert1] = addWall
+            return True
         return False
         
 
 
     def updateWall(self, vert1:Coordinates, vert2:Coordinates, wallStatus:bool)->bool:
         if wallStatus:#check whether to add wall
-            if vert1 in self.vertexDictionary and vert2 in self.vertexDictionary:#check whether the points even exist
-                if vert1.isAdjacent(vert2):#check whether the points are adjacent
-                    self.vertexDictionary[vert1].remove(vert2) #remove vert2 from vert1's list and vice versa
-                    self.vertexDictionary[vert2].remove(vert1)
-                    return True
+            if self.hasEdge(vert1, vert2):#check whether the points are an edge
+                self.vertexDictionary[vert1][vert2] = True #append each point to the other's adjacency dictionary with the value of the relationship being whether there is a wall or not
+                self.vertexDictionary[vert2][vert1] = True
+                return True
         else:
-            if vert1 in self.vertexDictionary and vert2 in self.vertexDictionary:#check whether the points even exist
-                if vert1.isAdjacent(vert2):#check whether the points are adjacent
-                    self.vertexDictionary[vert1].append(vert2) #append vert2 from vert1's list and vice versa
-                    self.vertexDictionary[vert2].append(vert1)
+            if self.hasEdge(vert1, vert2):#check whether the points are an edge
+                self.vertexDictionary[vert1][vert2] = False #append each point to the other's adjacency dictionary with the value of the relationship being whether there is a wall or not
+                self.vertexDictionary[vert2][vert1] = False
         return False
         pass
 
@@ -94,11 +91,11 @@ class AdjListGraph(Graph):
 
     def getWallStatus(self, vert1:Coordinates, vert2:Coordinates)->bool:
         if vert1 in self.neighbours(vert2): #check if verticies are next to each other
-            if not self.hasEdge(vert1, vert2): #even though they are next to each other if they don't have an edge then there's a wall there
+            if self.vertexDictionary[vert1][vert2] == True and self.vertexDictionary[vert2][vert1] == True: #if the value of the relationship is true there is a wall
                 return True
             else:
                 return False
-        else:
+        else: #if they are not adjacent there is no wall
             return False
         
     
@@ -106,8 +103,7 @@ class AdjListGraph(Graph):
 
     def neighbours(self, label:Coordinates)->List[Coordinates]:
         neighbourList = [] #create empty list
-        for temp in self.vertexDictionary: #check each vertex to see if it's adjacent
-            if label.isAdjacent(temp):
-                neighbourList.append(temp) #if so add to the list
+        for temp in self.vertexDictionary[label]: #check each vertex to see if it's adjacent
+            neighbourList.append(temp) #if so add to the list
         return neighbourList
         
